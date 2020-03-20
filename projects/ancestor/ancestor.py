@@ -93,39 +93,49 @@ class Graph:
 
     def get_parent(self, vertex_id):
         return self.vertices[vertex_id]
-
+    
+    def take_values(self, ancestors):
+        for pair in ancestors:
+            if pair[1] not in self.vertices:
+                self.add_vertex(pair[1])
+            if pair[0] not in self.vertices:
+                self.add_vertex(pair[0])
+            self.add_edge(pair[0], pair[1])
+    
 
 def earliest_ancestor(ancestors, starting_node):
     g = Graph()
-    for pair in ancestors:
-        if pair[1] not in g.vertices:
-            g.add_vertex(pair[1])
-        if pair[0] not in g.vertices:
-            g.add_vertex(pair[0])
-        g.add_edge(pair[0], pair[1])
+    g.take_values(ancestors)
 
-    if len(g.get_parent(starting_node))==0:
-        return -1
-   
     s = Stack()
-    s.push(starting_node)
+    s.push([starting_node])
     visited = set()
-    while s.size() > 0:
-        v = s.pop()
-        if v not in visited:
-            visited.add(v)
-            min_parent = None
-            for neighbor in g.get_parent(v):
-                if min_parent == None:
-                    min_parent = neighbor
-                elif min_parent > neighbor:
-                    min_parent = neighbor
-            if min_parent is None:
-                return v
-            else:
-                s.push(min_parent)
-   
+    longest_path = 1
+    min_parent = 100000
 
+    if len(g.get_parent(starting_node)) == 0:
+        return -1
+    else:
+        while s.size() > 0:
+            path = s.pop()
+            last_node = path[-1]
+            if longest_path < len(path):
+                longest_path = len(path)
+                min_parent = last_node
+            if longest_path == len(path):
+                if min_parent > last_node:
+                    min_parent = last_node
+            for parents in g.get_parent(last_node):
+                new_path = path.copy()
+                new_path.append(parents)
+                s.push(new_path)
+        return min_parent
+    
+
+
+
+
+   
 
 test_ancestors = [(1, 3), (2, 3), (3, 6), (5, 6), (5, 7),
                   (4, 5), (4, 8), (8, 9), (11, 8), (10, 1)]
