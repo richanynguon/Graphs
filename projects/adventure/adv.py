@@ -30,9 +30,6 @@ player = Player(world.starting_room)
 # traversal_path = ['n', 'n']
 
 traversal_path = []
-starting_path = [world.starting_room]  # stack
-visited = set()
-
 opposite_dir = {
     'n': 's',
     's': 'n',
@@ -40,90 +37,155 @@ opposite_dir = {
     'w': 'e',
 }
 
-stack = Stack()
-stack.push(starting_path)
+visited = {player.current_room}
+local_path = Stack()
 
-while len(visited) < 500:
-    local_path = stack.pop()
-    current_node = local_path[-1]
-    try:
-        if current_node not in visited:
-            visited.add(current_node)
-            
-            neighbor_nodes = set()
-            stored_direction = []
+while len(visited) < len(world.rooms):
+    current_room = player.current_room
+    last_room = player.current_room
+    
+    possible_rooms = player.current_room.get_exits()
+    random.shuffle(possible_rooms)
 
-            for direction in current_node.get_exits():
-                room = current_node.get_room_in_direction(direction)
-                stored_direction.append({"room": room, "dir": direction})
-                neighbor_nodes.add(room)
+    for direction in possible_rooms:
+        possible_room = current_room.get_room_in_direction(direction)
+        if possible_room == None:
+            continue
+        if possible_room not in visited:
+            visited.add(possible_room)
+            local_path.push(direction)
+            traversal_path.append(direction)
+            player.travel(direction)
+            last_room = possible_room
+            break                  
+    if current_room == last_room:
+        dir_to_last = opposite_dir[local_path.pop()]
+        traversal_path.append(dir_to_last)
+        player.travel(dir_to_last)
 
-            unvisited_neighbors = neighbor_nodes - visited
-            if len(unvisited_neighbors) == 0:
-                raise Exception
-            random_neighbor = random.sample(unvisited_neighbors, 1)[-1]
-            new_local = local_path.copy()
-            new_local.append(random_neighbor)
 
-            direction =  [stored for stored in stored_direction if stored["room"] == random_neighbor]
+# visited= set()
+# stack = Stack()
+# stack.push([world.starting_room])
+# while len(visited) < 500:
+#     local_path = stack.pop()
+#     current_node = local_path[-1]
+#     try:
+#         if current_node not in visited:
+#             visited.add(current_node)
+#             neighbor_nodes = set()
+#             stored_direction = []
 
-            room_dir = direction[-1]["dir"]
+#             for direction in current_node.get_exits():
+#                 room = current_node.get_room_in_direction(direction)
+#                 stored_direction.append({"room": room, "dir": direction})
+#                 neighbor_nodes.add(room)
 
-            traversal_path.append(room_dir)
-            stack.push(new_local)
-        else: raise Exception
-    except:
-        current_node = local_path[-1]
-        neighbor_nodes = set()
-        stored_direction = []
+#             unvisited_neighbors = neighbor_nodes - visited
+#             if len(unvisited_neighbors) == 0:
+#                 raise Exception
+#             random_neighbor = random.sample(unvisited_neighbors, 1)[-1]
+#             new_local = local_path.copy()
+#             new_local.append(random_neighbor)
 
-        for direction in current_node.get_exits():
-            room = current_node.get_room_in_direction(direction)
-            stored_direction.append({"room": room, "dir": direction})
-            neighbor_nodes.add(room)
+#             direction =  [stored for stored in stored_direction if stored["room"] == random_neighbor]
 
-        unvisited_neighbors = neighbor_nodes - visited
-        if len(unvisited_neighbors) == 0:
-            new_local = local_path[:-1]
-            last_node = new_local[-1]
-            stored_direction = []
+#             room_dir = direction[-1]["dir"]
 
-            for direction in last_node.get_exits():
-                room = last_node.get_room_in_direction(direction)
-                if room == current_node:
-                    stored_direction.append({"room": room, "dir": direction})
+#             traversal_path.append(room_dir)
+#             stack.push(new_local)
+#         else: raise Exception
+#     except:
+#         current_node = local_path[-1]
+#         neighbor_nodes = set()
+#         stored_direction = []
 
-            direction = stored_direction[-1]['dir']
+#         for direction in current_node.get_exits():
+#             room = current_node.get_room_in_direction(direction)
+#             stored_direction.append({"room": room, "dir": direction})
+#             neighbor_nodes.add(room)
 
-            back_dir =  opposite_dir[f"{direction}"]
+#         unvisited_neighbors = neighbor_nodes - visited
+#         if len(unvisited_neighbors) == 0:
+#             new_local = local_path[:-1]
+#             last_node = new_local[-1]
+#             stored_direction = []
 
-            traversal_path.append(back_dir)
-            stack.push(new_local)
-        else:
-            neighbor_nodes = set()
-            stored_direction = []
+#             for direction in last_node.get_exits():
+#                 room = last_node.get_room_in_direction(direction)
+#                 if room == current_node:
+#                     stored_direction.append({"room": room, "dir": direction})
 
-            for direction in current_node.get_exits():
-                room = current_node.get_room_in_direction(direction)
-                stored_direction.append({"room": room, "dir": direction})
-                neighbor_nodes.add(room)
+#             direction = stored_direction[-1]['dir']
 
-            unvisited_neighbors = neighbor_nodes - visited
-            random_neighbor = random.sample(unvisited_neighbors, 1)[-1]
-            new_local = local_path.copy()
-            new_local.append(random_neighbor)
+#             back_dir =  opposite_dir[f"{direction}"]
 
-            direction =  [stored for stored in stored_direction if stored["room"] == random_neighbor]
+#             traversal_path.append(back_dir)
+#             stack.push(new_local)
+#         else:
+#             neighbor_nodes = set()
+#             stored_direction = []
 
-            room_dir = direction[-1]["dir"]
+#             for direction in current_node.get_exits():
+#                 room = current_node.get_room_in_direction(direction)
+#                 stored_direction.append({"room": room, "dir": direction})
+#                 neighbor_nodes.add(room)
 
-            traversal_path.append(room_dir)
-            stack.push(new_local)
+#             unvisited_neighbors = neighbor_nodes - visited
+#             random_neighbor = random.sample(unvisited_neighbors, 1)[-1]
+#             new_local = local_path.copy()
+#             new_local.append(random_neighbor)
 
-# print(traversal_path)
+#             direction =  [stored for stored in stored_direction if stored["room"] == random_neighbor]
+
+#             room_dir = direction[-1]["dir"]
+
+#             traversal_path.append(room_dir)
+#             stack.push(new_local)
+
+
+
+    '''
+
+    im in a room
+    i need to explore if there are rooms n, s, e, w
+    then i will randomly pick one after surveying the rooms
+    i'll go to the randomly picked one that i havent visited
+    take a write down my path 
+    i repeat until all my possible paths are already visited
+    if this is true then backtrack to the room before until
+    there are rooms i have not visited
+    
+
+
+
+
+    i start in room
+    lay done some crumbs aka my current path in this room
+    then i look for all exits
+    if it leads to a room that I havent visited yet
+    then i go there
+    if i hit a room where there are only rooms that i've visted then i follow back my bread crumbs but i pick up my bread crumbs
+    aka remove the last room on my current path
+    then i check if i have rooms i can walk to if not then keep going back and removing my crumbs
+
+
+    get all exits 
+    i pick one that i havent visted
+    keep track of the path i've taken
+    enter room
+    repeat until either there are no 
+
+    '''
+
 
 '''
 
+room.get_exits return ["n", "w"]
+room.get_room_in_direction returns room object
+
+player.travel changes room
+player.current_room will give room object
 
 so maybe checking if this current room has neighbors they havent visited if so then go there
 if not then keep backtracking
@@ -145,85 +207,8 @@ repeat step 1 -4
 until there are no neighbors that you have not visited
 then you keep popping off lp until v reaches to  500 rooms
 
-room.get_exits return ["n", "w"]
-room.get_room_in_direction returns room object
     
 old version
-while len(visited) < 500:
-    local_path = stack.pop()
-    current_node = local_path[-1]
-    try:
-        if current_node not in visited:
-            visited.add(current_node)
-            neighbor_nodes = set()
-            stored_direction = []
-
-            for direction in current_node.get_exits():
-                room = current_node.get_room_in_direction(direction)
-                stored_direction.append({"room": room, "dir": direction})
-                neighbor_nodes.add(room)
-
-            unvisited_neighbors = neighbor_nodes - visited
-            if len(unvisited_neighbors) == 0:
-                raise Exception
-            random_neighbor = random.sample(unvisited_neighbors, 1)[-1]
-            new_local = local_path.copy()
-            new_local.append(random_neighbor)
-
-            direction =  [stored for stored in stored_direction if stored["room"] == random_neighbor]
-
-            room_dir = direction[-1]["dir"]
-
-            traversal_path.append(room_dir)
-            stack.push(new_local)
-        else: raise Exception
-    except:
-        current_node = local_path[-1]
-        neighbor_nodes = set()
-        stored_direction = []
-
-        for direction in current_node.get_exits():
-            room = current_node.get_room_in_direction(direction)
-            stored_direction.append({"room": room, "dir": direction})
-            neighbor_nodes.add(room)
-
-        unvisited_neighbors = neighbor_nodes - visited
-        if len(unvisited_neighbors) == 0:
-            new_local = local_path[:-1]
-            last_node = new_local[-1]
-            stored_direction = []
-
-            for direction in last_node.get_exits():
-                room = last_node.get_room_in_direction(direction)
-                if room == current_node:
-                    stored_direction.append({"room": room, "dir": direction})
-
-            direction = stored_direction[-1]['dir']
-
-            back_dir =  opposite_dir[f"{direction}"]
-
-            traversal_path.append(back_dir)
-            stack.push(new_local)
-        else:
-            neighbor_nodes = set()
-            stored_direction = []
-
-            for direction in current_node.get_exits():
-                room = current_node.get_room_in_direction(direction)
-                stored_direction.append({"room": room, "dir": direction})
-                neighbor_nodes.add(room)
-
-            unvisited_neighbors = neighbor_nodes - visited
-            random_neighbor = random.sample(unvisited_neighbors, 1)[-1]
-            new_local = local_path.copy()
-            new_local.append(random_neighbor)
-
-            direction =  [stored for stored in stored_direction if stored["room"] == random_neighbor]
-
-            room_dir = direction[-1]["dir"]
-
-            traversal_path.append(room_dir)
-            stack.push(new_local)
 
 
 
